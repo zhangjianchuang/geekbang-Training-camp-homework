@@ -10,14 +10,14 @@ type User struct {
 	age int
 }
 
-func getUserFromDB(username string) (User, error) {
+func getUserFromDB(_ string) (User, error) {
 	return User{}, sql.ErrNoRows
 }
-func getUserAgeFromDB(username string) (int, error) {
+func getUserAgeFromDB(_ string) (int, error) {
 	return 0, sql.ErrNoRows
 }
 
-func addUser() User {
+func addUser(_ string) User {
 	return User{}
 }
 
@@ -25,7 +25,7 @@ func addUser() User {
 func getUser(username string) (User, error) {
 	u, err := getUserFromDB(username)
 	if err != nil && err == sql.ErrNoRows {
-		return addUser(), nil
+		return addUser(username), nil
 	}
 	if err != nil {
 		return User{}, err
@@ -53,10 +53,10 @@ func getUserWithAge(username string) (User, error) {
 func main() {
 	_, err := getUser("abc")
 	if err != nil {
-		fmt.Println("getUser got an error: ", err.Error())
+		fmt.Println(fmt.Errorf("getUser got an error:%+v ", err))
 	}
 	_, err = getUserWithAge("abc")
 	if err != nil {
-		fmt.Println("getUserWithAge got an error: ", err.Error())
+		fmt.Println(fmt.Errorf("getUserWithAge got an error: %+v", err))
 	}
 }
