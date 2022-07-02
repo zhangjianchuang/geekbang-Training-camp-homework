@@ -21,6 +21,7 @@ func addUser() User {
 	return User{}
 }
 
+// 如果用户不存在，去创建一个，所以ErrNoRows不是异常
 func getUser(username string) (User, error) {
 	u, err := getUserFromDB(username)
 	if err != nil && err == sql.ErrNoRows {
@@ -32,6 +33,7 @@ func getUser(username string) (User, error) {
 	return u, nil
 }
 
+// 用户和年龄都必须存在，那么有一个不存在都需要向上返回一个错误
 func getUserWithAge(username string) (User, error) {
 	u, err := getUserFromDB(username)
 	if err != nil && err == sql.ErrNoRows {
