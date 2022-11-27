@@ -1,59 +1,27 @@
-我觉得遇到sql.ErrNoRows的时候应该分两种情况
+## 微信业务架构图
+![img.png](img.png)
 
-1. 这个error就不是一个error，没有数据是一个正常现象，比如登陆功能，很多都是如果发现用户不存在，直接就给他注册了，而不是向页面说这个用户不存在
 
-2. 这个error在业务上也是一个error，那么就应该Wrap，比如说我要获取一个用户和它的年龄信息，这个信息需要查两次数据库，如果不Wrap，那么上层根本不知道到底用户不存在，还是年龄不存在。另外我认为哪怕只是查一次数据库，也应该去封装，这样能够精确定位到问题在哪里
+## 学生管理系统
+### 方案一
+![img_1.png](img_1.png)
+* 优势：简单且成本低，所有的模块均在一个应用中完成
+* 缺点：不能满足要求中的不能太简单规则
 
-```go
-package main
+### 方案二
+![img_2.png](img_2.png)
+* 优势：能够最大程度发挥开发人员特长，PHP高手去开发PHP页面，java开发后端业务逻辑
+* 缺点：比方案一要多一个节点，需要更高的成本
 
-import (
-    "database/sql"
-    "fmt"
-    "github.com/pkg/errors"
-)
+### 方案三
+![img_3.png](img_3.png)
 
-type User struct {
-    age int
-}
+* 优势：数据更加安全，当后端服务节点损坏时，数据节点依旧可用
+* 缺点：需要的成本最高，且在需求中并不需要非常高的数据可靠性
 
-func getUserFromDB(username string) (User, error) {
-    return User{}, sql.ErrNoRows
-}
-func getUserAgeFromDB(username string) (int, error) {
-    return 0, sql.ErrNoRows
-}
+### 方案取舍
+1. 因为是毕设，所以只要可以使用，且理论上能够存储1000个学生的数据信息就足够，因此高可用、高性能、高扩展都不是最重要的
+2. 因为都为学生，学生能够支付的成本有限，所以应该在最大程度上降低成本，因此成本应该是最重要的一个考量因素
+3. 因为题目限制，不能太过简单，因此最终的架构设计不能只满足使用
 
-func addUser() User {
-    return User{}
-}
-
-// 如果用户不存在，去创建一个，所以ErrNoRows不是异常
-func getUser(username string) (User, error) {
-    u, err := getUserFromDB(username)
-    if err != nil && err == sql.ErrNoRows {
-        return addUser(), nil
-    }
-    if err != nil {
-        return User{}, err
-    }
-    return u, nil
-}
-
-// 用户和年龄都必须存在，那么有一个不存在都需要向上返回一个错误
-func getUserWithAge(username string) (User, error) {
-    u, err := getUserFromDB(username)
-    if err != nil && err == sql.ErrNoRows {
-        return User{}, errors.Wrap(sql.ErrNoRows, fmt.Sprintf("user[%s] not found", username))
-    }
-    a, err := getUserAgeFromDB(username)
-    if err != nil && err == sql.ErrNoRows {
-        return User{}, errors.Wrap(sql.ErrNoRows, fmt.Sprintf("user[%s] age not found", username))
-    }
-    if err != nil {
-        return User{}, err
-    }
-    u.age = a
-    return u, nil
-}
-```
+结论：最终选择方案二
